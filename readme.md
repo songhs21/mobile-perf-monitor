@@ -138,7 +138,7 @@ UI 전환 이후 Unknown 메모리가 증가하는 패턴이 확인되었는데,
 | Leak Rate | 223.23 MB/min | 317.32 MB/min |
 | 종료 원인 | OS Signal 9 (OOM Killer) |OS Signal 9 (OOM Killer) |
 
-상세 데이터는 [Y700 Performance Log](./result/Y700/perf_log.jsonl) 및 [Fold5 Performance Log](./result/Fold5/perf_log.jsonl) 참조
+RAW DATA: [Y700 Performance Log](./result/Y700/perf_log.jsonl) | [Fold5 Performance Log](./result/Fold5/perf_log.jsonl)
 
 ## 실행 환경
 - Windows 10 / 11

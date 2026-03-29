@@ -133,7 +133,7 @@ UI 전환 이후 Unknown 메모리가 증가하는 패턴이 확인되었는데,
 |------|------|------|
 | 테스트 기기 | LEGION Y700 4Gen | Galaxy Fold 5 |
 | 총 테스트 시간 | 약 54분 | 약 29분 |
-| 총 반복 횟수 | 156번 | 72번 |
+| 총 반복 횟수 | 156번 | 55번 |
 | 시작 메모리 | 617MB | 602MB |
 | Leak Rate | 223.23 MB/min | 317.32 MB/min |
 | 종료 원인 | OS Signal 9 (OOM Killer) |OS Signal 9 (OOM Killer) |

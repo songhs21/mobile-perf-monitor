@@ -16,7 +16,7 @@ def get_timestamped_filename(base_name):
     return f"{now}_{base_name}.png"
 
 # CPU, FPS, RAM을 하나의 차트로 통합하고 상태 변화 지점에 점을 찍어 그래프로 저장
-def draw_total_graph(log_path, output_dir):
+def draw_total_graph(log_path, output_dir, model_name):
     
     # 한글 폰트 설정 (Windows 기준)
     matplotlib.rcParams['font.family'] = 'Malgun Gothic'
@@ -51,14 +51,18 @@ def draw_total_graph(log_path, output_dir):
 
     df['time'] = pd.to_datetime(df['time'])
     
-    active_df = df[df['state'] != 'IDLE_CHECK'].reset_index(drop=True)
+    active_df = df[~df['state'].isin(['IDLE_CHECK', 'UNKNOWN', 'KILLED'])].reset_index(drop=True)
 
     duration_min = (df['time'].max() - df['time'].min()).total_seconds() / 60
 
     if len(active_df) > 1:
-        mem_diff = active_df['meminfo'].iloc[-1] - active_df['meminfo'].iloc[0]
-    else:
-        mem_diff = 0
+        # 0이거나 비정상적으로 낮은 값 제거
+        valid_mem = active_df[active_df['meminfo'] > 100]
+        if len(valid_mem) > 1:
+            mem_diff = valid_mem['meminfo'].iloc[-1] - valid_mem['meminfo'].iloc[0]
+        else:
+            mem_diff = 0
+
     leak_rate_min = mem_diff / duration_min if duration_min > 0 else 0
     DEVICE_TOTAL_MB = 12288
     oom_threshold = DEVICE_TOTAL_MB * 0.9  
@@ -77,7 +81,6 @@ def draw_total_graph(log_path, output_dir):
     df['state_changed'] = df['state'].ne(df['state'].shift())
     change_points = df[df['state_changed']].copy()
 
-    
     for ax, column, label, color in metrics:
         ax.scatter(change_points['time'], change_points[column], 
                    color='black', s=5, alpha=0.3, zorder=4)
@@ -126,39 +129,83 @@ def draw_total_graph(log_path, output_dir):
             ax.set_ylim(ymin * 0.9, ymax * 1.2) 
             ax.legend(loc='upper right') 
 
-            # IDLE 구간 회색 배경
-            idle_groups = df[df['state'] == 'IDLE_CHECK']
-            if not idle_groups.empty:
-                for _, group in idle_groups.groupby((idle_groups['time'].diff() > pd.Timedelta(seconds=2)).cumsum()):
-                    ax.axvspan(group['time'].min(), group['time'].max(),
-                            color='gray', alpha=0.1)
+        # 상태별 배경색 구간 표시
+        state_colors = {
+            'TITLE': 'gold',
+            'LOADING': 'cyan',
+            'LOBBY': 'cornflowerblue',
+            'CHARACTER': 'mediumseagreen',
+            'NETWORK': 'salmon',
+            'UNKNOWN': 'darkgray',
+            'KILLED': 'black'
+        }
 
-        # 상태 라벨 너무 많으면 겹쳐서 10개당 1개만 표시
+        for i in range(len(change_points) - 1):
+            row = change_points.iloc[i]
+            next_row = change_points.iloc[i + 1]
+            state = row['state']
+            c = state_colors.get(state, 'white')
+            alpha = 0.6 if state == 'KILLED' else 0.35
+            ax.axvspan(row['time'], next_row['time'],
+                       color=c, alpha=alpha, zorder=0)
+            
+        last_row = change_points.iloc[-1]
+        ax.axvspan(last_row['time'], df['time'].iloc[-1],
+                   color=state_colors.get(last_row['state'], 'white'),
+                   alpha=0.2, zorder=0)
+
+        # 각 상태 첫 등장 시 1회만 표시
         if ax == ax1:
+            seen_states = set()
             for i, (_, row) in enumerate(change_points.iterrows()):
-                if i % 10 == 0:
-                    offset = 15 if (i // 10) % 2 == 0 else -25
+                if row['state'] not in seen_states:
+                    seen_states.add(row['state'])
+                    offset = 15 if len(seen_states) % 2 == 0 else -25
                     ax.annotate(row['state'], (row['time'], row[column]),
                                 textcoords="offset points", xytext=(0, offset),
                                 ha='center', fontsize=8, rotation=45, alpha=0.8)
+
 
     oom_status = f"약 {minutes_to_oom:.1f}분 후" if minutes_to_oom != float('inf') else "안정적"
     
     summary_text = (
         f"Memory Leak Analysis\n"
-        f"• Leak Rate: {leak_rate_min:.2f} MB/min\n"
-        f"• Est. Time to OOM: {oom_status}"
+        f"• Leak Rate: {leak_rate_min:.2f} MB/min"
     )
 
     ax3.text(0.02, 0.95, summary_text, transform=ax3.transAxes, 
              fontsize=10, verticalalignment='top', fontweight='bold',
              bbox=dict(boxstyle='round', facecolor='white', alpha=0.85, edgecolor='gray'))
     
+    
+    if model_name == 'TB322FC': model_name = 'Y700 4Gen'
     plt.xlabel('Timeline', fontweight='bold')
     plt.suptitle(
-        f"Total Performance Report: {os.path.basename(output_dir)}",
+        f"Total Performance Report: {os.path.basename(output_dir)}\n"
+        f"Device: {model_name}",
         fontsize=16
     )
+
+    state_legend_items = [
+    ('■ TITLE', 'gold'),
+    ('■ LOADING', 'cyan'),
+    ('■ LOBBY', 'cornflowerblue'),
+    ('■ CHARACTER', 'mediumseagreen'),
+    ('■ NETWORK', 'salmon'),
+    ('■ UNKNOWN', 'darkgray'),
+    ('■ KILLED', 'black'), 
+    ]
+
+    char_unit = 0.006
+    sep_unit = 0.03
+
+    # 전체 너비 계산 (모든 단어 길이 합 + 간격 합)
+    total_width = sum(len(t) * char_unit for t, _ in state_legend_items) + (len(state_legend_items) - 1) * sep_unit
+    x = 0.5 - (total_width / 2)
+
+    for text, color in state_legend_items:
+        fig.text(x, 0.90, text, ha='left', fontsize=10, color=color, fontweight='bold')
+        x += (len(text) * char_unit) + sep_unit
 
     save_path = os.path.join(output_dir, "total_report.png")
     plt.savefig(save_path, bbox_inches='tight', dpi=150)

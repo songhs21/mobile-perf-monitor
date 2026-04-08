@@ -94,7 +94,7 @@ if __name__ == "__main__":
     logging.info("테스트 종료: 그래프 생성을 시작합니다...")
     try:
         # 개별 함수 대신 통합 함수(draw_all_graphs)를 호출하여 세션 폴더에 저장
-        performance_logger.draw_total_graph(full_log_path, session_dir)
+        performance_logger.draw_total_graph(full_log_path, session_dir, driver.model_name)
         logging.info(f"모든 결과물이 '{session_dir}' 폴더에 저장되었습니다.")
     except Exception as e:
         logging.error(f"그래프 생성 실패: {e}")

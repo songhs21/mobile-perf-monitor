@@ -34,7 +34,7 @@ def create_driver(device_name):
     options.set_capability('appium:uiautomator2ServerReadTimeout', 60000)
     options.set_capability('uiautomator2ServerLaunchTimeout', 90000)
 
-    logging.info(f"드라이버 세션 재연결 시도 중... ({device_name})")
+    logging.info(f"드라이버 세션 연결 시도 중... ({device_name})")
 
     driver = webdriver.Remote("http://127.0.0.1:4723", options=options)
 
@@ -446,6 +446,7 @@ def run_stability_test(iterations, driver, PACKAGE, shared, log_dir):
 
                             if not pid:
                                 logging.error("앱 프로세스 사라짐 감지 (UNKNOWN 구간)")
+                                shared['state'] = 'KILLED'
                                 raise Exception("APP_PROCESS_GONE")
                             
                             # 타임아웃 기준 (2초 인터벌 기준 30회 = 약 60초)

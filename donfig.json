@@ -1,0 +1,41 @@
+{
+  "environment": {
+    "tesseract_path": "C:/Tesseract-OCR/tesseract.exe",
+    "app_package": "com.epidgames.trickcalrevive"
+  },
+  "devices": {
+    "TB322FC": {
+      "model_name": "Lenovo Y700 4Gen",
+      "width": 3040, "height": 1904,
+      "lby_offset": 30,
+      "cy_offset": 60,
+      "description": "태블릿 전용 보정값 적용"
+    },
+    "SM-F946N": {
+      "model_name": "Galaxy Fold 5 unfolding",
+      "width": 2176, "height": 1812,
+      "y_offset": 0,
+      "description": "폴드 메인 디스플레이"
+    },
+    "DEFAULT": {
+      "y_offset": 0
+    }
+  },
+  "ui_states": {
+    "TITLE":    { "ratio": [0.0543, 0.0814], "rgb": [255, 83, 120] },
+    "LOADING":  { "ratio": [0.4596, 0.1876], "rgb": [164, 223, 115] },
+    "LOBBY":    { "ratio": [0.4619, 0.9189], "rgb": [96, 117, 244] },
+    "CHARACTER":{ "ratio": [0.2022, 0.1104], "rgb": [255, 145, 66] },
+    "NETWORK":  { "ratio": [0.4963, 0.5300], "rgb": [192, 210, 232] },
+    "POPUP":    { "ratio": [0.593, 0.690], "rgb": [255, 222, 115] }
+  },
+  "actions": {
+    "TITLE_SCAN_X": [45, 90, 20],
+    "TITLE_SCAN_Y": [45, 90, 20],
+    "TITLE_TOUCH_CENTER": {"x": 0.5, "y": 0.5},
+    "LOBBY_TO_CHAR": {"x": 0.3585, "y": 0.9382},
+    "SCROLL_START": {"x": 0.5, "y": 0.86},
+    "SCROLL_END": {"x": 0.5, "y": 0.4},
+    "BTN_BACK": {"x": 0.032, "y": 0.038}
+  }
+}
